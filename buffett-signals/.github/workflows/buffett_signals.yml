@@ -1,0 +1,45 @@
+name: Buffett Signals Daily Scan
+
+on:
+  # Mon–Fri at 9:35 AM ET (13:35 UTC summer / 14:35 UTC winter)
+  # We use 13:35 UTC which covers EDT (UTC-4). In EST (UTC-5) this runs at 8:35 AM.
+  schedule:
+    - cron: "35 13 * * 1-5"   # summer (EDT)
+    - cron: "35 14 * * 1-5"   # winter (EST)  ← GitHub deduplicates same-minute runs
+  # Allow manual trigger from the GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  scan:
+    name: Run daily stock scan
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write   # needed to push reports back to repo
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Buffett Signals
+        run: python buffett_signals.py
+
+      - name: Commit and push reports
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          # Only commit if there are changes
+          git diff --cached --quiet || git commit -m "chore: daily scan $(date -u +%Y-%m-%d)"
+          git push
