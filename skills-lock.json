@@ -37,6 +37,12 @@
       "skillPath": "skills/stock-market-pro/SKILL.md",
       "computedHash": "8adbdfda7d726aa3124d7996318ca2baa14fc80da36720c1899396d67aa26c93"
     },
+    "technical-analysis": {
+      "source": "omer-metin/skills-for-antigravity",
+      "sourceType": "github",
+      "skillPath": "skills/technical-analysis/SKILL.md",
+      "computedHash": "648e00fcf4b1da1689fa1df1bad5249c5f04625e6264475369d51a3a50a7eb0d"
+    },
     "trading-signals": {
       "source": "scientiacapital/skills",
       "sourceType": "github",
