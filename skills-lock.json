@@ -1,6 +1,18 @@
 {
   "version": 1,
   "skills": {
+    "crypto-trading-advisor": {
+      "source": "0xrikt/crypto-skills",
+      "sourceType": "github",
+      "skillPath": "crypto-trading-advisor/SKILL.md",
+      "computedHash": "ac551592a1aeb2c68c16c0a591638e303a8b4da930147c636f018b5d9b55e3aa"
+    },
+    "entry-signals": {
+      "source": "0xhubed/agent-trading-arena",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/entry-signals/SKILL.md",
+      "computedHash": "2e04ff9e2d36d102c041761b8ea4af7cd5a4b6420ea7bd1cd5f47d5b8d9f172a"
+    },
     "financial-deep-research": {
       "source": "eng0ai/eng0-template-skills",
       "sourceType": "github",
@@ -12,6 +24,12 @@
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "9e1c8b3103f92fa8092568a44fe64858de7c5c9dc65ce4bea8f168080e889cfd"
+    },
+    "market-sentiment": {
+      "source": "kukapay/crypto-skills",
+      "sourceType": "github",
+      "skillPath": "skills/market-sentiment/SKILL.md",
+      "computedHash": "2aefed72205c2a2e2d9473000cd28086434a1766512b24533952a88deea7b0ce"
     },
     "stock-market-pro": {
       "source": "sundial-org/awesome-openclaw-skills",
