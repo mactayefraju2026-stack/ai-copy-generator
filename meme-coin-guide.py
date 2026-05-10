@@ -7,7 +7,7 @@ from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.platypus import KeepTogether
 
 doc = SimpleDocTemplate(
-    "/home/user/ai-copy-generator/MemeCoins-Trading-Guide.pdf",
+    "/home/user/ai-copy-generator/MemeCoin-DR.pdf",
     pagesize=letter,
     rightMargin=0.75*inch,
     leftMargin=0.75*inch,
@@ -412,4 +412,4 @@ story.append(Paragraph(
 story.append(Paragraph("AI Trading Assistant  |  May 2026", small_style))
 
 doc.build(story)
-print("PDF created successfully: MemeCoins-Trading-Guide.pdf")
+print("PDF created successfully: MemeCoin-DR.pdf")
