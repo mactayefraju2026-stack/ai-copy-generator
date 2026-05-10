@@ -1,0 +1,174 @@
+//@version=5
+indicator("AI Trading Assistant — Full Analysis", overlay=true, max_lines_count=500, max_labels_count=500)
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+showEMA        = input.bool(true,  "Show EMA Lines",          group="Moving Averages")
+showSupRes     = input.bool(true,  "Show Support & Resistance",group="Support & Resistance")
+srLookback     = input.int(50,     "S/R Lookback Bars",        group="Support & Resistance", minval=10, maxval=200)
+srStrength     = input.int(2,      "S/R Strength (touches)",   group="Support & Resistance", minval=1, maxval=5)
+showSignals    = input.bool(true,  "Show Buy/Sell Signals",    group="Signals")
+showRSICloud   = input.bool(true,  "Show Overbought/Oversold Background", group="Signals")
+
+// ═══════════════════════════════════════════════════
+// MOVING AVERAGES
+// ═══════════════════════════════════════════════════
+ema20  = ta.ema(close, 20)
+ema50  = ta.ema(close, 50)
+ema200 = ta.ema(close, 200)
+
+plot(showEMA ? ema20  : na, "EMA 20",  color=color.new(color.green, 0),  linewidth=1)
+plot(showEMA ? ema50  : na, "EMA 50",  color=color.new(color.orange, 0), linewidth=2)
+plot(showEMA ? ema200 : na, "EMA 200", color=color.new(color.red, 0),    linewidth=2)
+
+// EMA labels on right edge
+if showEMA and barstate.islast
+    label.new(bar_index, ema20,  "EMA 20",  style=label.style_label_left, color=color.green,  textcolor=color.white, size=size.small)
+    label.new(bar_index, ema50,  "EMA 50",  style=label.style_label_left, color=color.orange, textcolor=color.white, size=size.small)
+    label.new(bar_index, ema200, "EMA 200", style=label.style_label_left, color=color.red,    textcolor=color.white, size=size.small)
+
+// ═══════════════════════════════════════════════════
+// SUPPORT & RESISTANCE — AUTO DETECTION
+// ═══════════════════════════════════════════════════
+pivotHigh = ta.pivothigh(high, srLookback / 2, srLookback / 2)
+pivotLow  = ta.pivotlow(low,   srLookback / 2, srLookback / 2)
+
+var float[] resistanceLevels = array.new_float(0)
+var float[] supportLevels    = array.new_float(0)
+
+// Collect pivot highs as resistance
+if not na(pivotHigh)
+    array.push(resistanceLevels, pivotHigh)
+    if array.size(resistanceLevels) > 10
+        array.shift(resistanceLevels)
+
+// Collect pivot lows as support
+if not na(pivotLow)
+    array.push(supportLevels, pivotLow)
+    if array.size(supportLevels) > 10
+        array.shift(supportLevels)
+
+// Draw resistance lines
+if showSupRes and barstate.islast
+    for i = 0 to array.size(resistanceLevels) - 1
+        lvl = array.get(resistanceLevels, i)
+        line.new(bar_index - srLookback, lvl, bar_index + 10, lvl,
+             color=color.new(color.red, 50), width=1, style=line.style_dashed)
+        label.new(bar_index + 5, lvl, "R " + str.tostring(lvl, "#.##"),
+             style=label.style_label_left, color=color.new(color.red, 70),
+             textcolor=color.white, size=size.tiny)
+
+// Draw support lines
+if showSupRes and barstate.islast
+    for i = 0 to array.size(supportLevels) - 1
+        lvl = array.get(supportLevels, i)
+        line.new(bar_index - srLookback, lvl, bar_index + 10, lvl,
+             color=color.new(color.green, 50), width=1, style=line.style_dashed)
+        label.new(bar_index + 5, lvl, "S " + str.tostring(lvl, "#.##"),
+             style=label.style_label_left, color=color.new(color.green, 70),
+             textcolor=color.white, size=size.tiny)
+
+// ═══════════════════════════════════════════════════
+// FIBONACCI LEVELS — FROM RECENT SWING
+// ═══════════════════════════════════════════════════
+swingHigh = ta.highest(high, 50)
+swingLow  = ta.lowest(low,  50)
+fibRange  = swingHigh - swingLow
+
+fib236 = swingHigh - fibRange * 0.236
+fib382 = swingHigh - fibRange * 0.382
+fib500 = swingHigh - fibRange * 0.500
+fib618 = swingHigh - fibRange * 0.618
+fib786 = swingHigh - fibRange * 0.786
+
+plot(fib382, "Fib 38.2%", color=color.new(color.purple, 60), linewidth=1, style=plot.style_linebr)
+plot(fib500, "Fib 50%",   color=color.new(color.purple, 40), linewidth=1, style=plot.style_linebr)
+plot(fib618, "Fib 61.8%", color=color.new(color.purple, 20), linewidth=2, style=plot.style_linebr)
+
+if barstate.islast
+    label.new(bar_index, fib382, "Fib 38.2% — " + str.tostring(fib382, "#.##"), style=label.style_label_left, color=color.new(color.purple, 60), textcolor=color.white, size=size.tiny)
+    label.new(bar_index, fib500, "Fib 50.0% — " + str.tostring(fib500, "#.##"), style=label.style_label_left, color=color.new(color.purple, 50), textcolor=color.white, size=size.tiny)
+    label.new(bar_index, fib618, "Fib 61.8% — " + str.tostring(fib618, "#.##"), style=label.style_label_left, color=color.new(color.purple, 40), textcolor=color.white, size=size.tiny)
+
+// ═══════════════════════════════════════════════════
+// RSI — OVERBOUGHT / OVERSOLD BACKGROUND
+// ═══════════════════════════════════════════════════
+rsi = ta.rsi(close, 14)
+isOverbought = rsi >= 70
+isOversold   = rsi <= 30
+
+bgcolor(showRSICloud and isOverbought ? color.new(color.red,   85) : na, title="Overbought Zone")
+bgcolor(showRSICloud and isOversold   ? color.new(color.green, 85) : na, title="Oversold Zone")
+
+// ═══════════════════════════════════════════════════
+// VOLUME SPIKE DETECTION
+// ═══════════════════════════════════════════════════
+volMA       = ta.sma(volume, 20)
+volumeSpike = volume > volMA * 2.0
+
+// ═══════════════════════════════════════════════════
+// BUY / SELL SIGNALS — CONFLUENCE BASED
+// ═══════════════════════════════════════════════════
+
+// BUY: price above EMA20, EMA20 above EMA50, RSI not overbought, volume spike
+buySignal = close > ema20 and ema20 > ema50 and rsi > 40 and rsi < 65 and volumeSpike and ta.crossover(close, ema20)
+
+// SELL: price below EMA20, EMA20 below EMA50, RSI high or dropping, volume spike
+sellSignal = close < ema20 and ema20 < ema50 and rsi > 55 and volumeSpike and ta.crossunder(close, ema20)
+
+// Strong BUY: price bounced off EMA200 with oversold RSI
+strongBuy = ta.crossover(close, ema200) and rsi < 45
+
+// Strong SELL: price crossed below EMA200
+strongSell = ta.crossunder(close, ema200) and rsi > 55
+
+if showSignals
+    if buySignal
+        label.new(bar_index, low - (high - low) * 0.5,
+             "BUY", style=label.style_label_up,
+             color=color.new(color.green, 0), textcolor=color.white, size=size.normal)
+
+    if sellSignal
+        label.new(bar_index, high + (high - low) * 0.5,
+             "SELL", style=label.style_label_down,
+             color=color.new(color.red, 0), textcolor=color.white, size=size.normal)
+
+    if strongBuy
+        label.new(bar_index, low - (high - low) * 0.8,
+             "STRONG BUY", style=label.style_label_up,
+             color=color.new(color.teal, 0), textcolor=color.white, size=size.large)
+
+    if strongSell
+        label.new(bar_index, high + (high - low) * 0.8,
+             "STRONG SELL", style=label.style_label_down,
+             color=color.new(color.maroon, 0), textcolor=color.white, size=size.large)
+
+// ═══════════════════════════════════════════════════
+// INFO TABLE — TOP RIGHT CORNER
+// ═══════════════════════════════════════════════════
+var table infoTable = table.new(position.top_right, 2, 7,
+     bgcolor=color.new(color.black, 20),
+     border_color=color.gray, border_width=1, frame_color=color.gray, frame_width=1)
+
+if barstate.islast
+    rsiColor   = rsi > 70 ? color.red : rsi < 30 ? color.green : color.orange
+    trendColor = close > ema200 ? color.green : color.red
+    trendText  = close > ema200 ? "BULLISH" : "BEARISH"
+    signalText = buySignal ? "BUY" : sellSignal ? "SELL" : strongBuy ? "STRONG BUY" : strongSell ? "STRONG SELL" : "NEUTRAL"
+    signalColor = (buySignal or strongBuy) ? color.green : (sellSignal or strongSell) ? color.red : color.gray
+
+    table.cell(infoTable, 0, 0, "INDICATOR",  text_color=color.white, bgcolor=color.new(color.blue, 30),  text_size=size.small)
+    table.cell(infoTable, 1, 0, "VALUE",      text_color=color.white, bgcolor=color.new(color.blue, 30),  text_size=size.small)
+    table.cell(infoTable, 0, 1, "Trend",      text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 1, trendText,    text_color=trendColor,  bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 0, 2, "RSI (14)",   text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 2, str.tostring(math.round(rsi, 1)), text_color=rsiColor, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 0, 3, "EMA 20",     text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 3, str.tostring(math.round(ema20, 2)),  text_color=color.green,  bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 0, 4, "EMA 50",     text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 4, str.tostring(math.round(ema50, 2)),  text_color=color.orange, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 0, 5, "EMA 200",    text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 5, str.tostring(math.round(ema200, 2)), text_color=color.red,    bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 0, 6, "Signal",     text_color=color.white, bgcolor=color.new(color.black, 50), text_size=size.small)
+    table.cell(infoTable, 1, 6, signalText,   text_color=signalColor, bgcolor=color.new(color.black, 50), text_size=size.small)
