@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 export default function Home() {
@@ -29,6 +30,11 @@ Contact ${businessName} today to get professional ${service} in ${location}.`;
   return (
     <main className="min-h-screen bg-white text-black p-8">
       <div className="max-w-2xl mx-auto">
+        <nav className="mb-6">
+          <Link href="/stocks" className="text-blue-600 hover:underline text-sm">
+            📈 THE POINT Stock Analyzer →
+          </Link>
+        </nav>
         <h1 className="text-4xl font-bold mb-4">AI Website Copy Generator</h1>
         <p className="text-gray-600 mb-6">
           Generate simple homepage copy for local businesses.
